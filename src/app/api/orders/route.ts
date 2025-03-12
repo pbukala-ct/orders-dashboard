@@ -1,60 +1,111 @@
 import { NextResponse } from 'next/server';
 import { apiRoot } from '@/lib/commercetools';
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { toZonedTime, format } from 'date-fns-tz';
+import { addDays } from 'date-fns';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const timeRange = searchParams.get('timeRange') || 'today';
   
-  // Define your timezone
-  const timezone = 'Australia/Sydney'; // AEST timezone
+  // Define your timezone offset in hours (AEST is UTC+10 or UTC+11 with daylight saving)
+  // You may need to adjust this based on daylight saving time
+  const timezoneOffsetHours = 11; // AEDT (with daylight saving)
+  
+  // Current date in UTC
   const now = new Date();
   
-  // Convert current date to your timezone
-  const zonedDate = toZonedTime(now, timezone);
-  
+  // Calculate date ranges based on the timezone offset
   let startDate: Date;
   let endDate: Date;
   
   switch (timeRange) {
     case 'today': {
-      // Get start and end of day in your timezone
-      const localStartOfDay = startOfDay(zonedDate);
-      const localEndOfDay = endOfDay(zonedDate);
+      // Create date at 00:00:00 in local timezone (which is actually the previous day in UTC)
+      startDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        0 - timezoneOffsetHours, // Subtract offset to get local midnight in UTC
+        0, 0, 0
+      ));
       
-      // Format dates in UTC for the API query
-      startDate = new Date(format(localStartOfDay, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", { timeZone: 'UTC' }));
-      endDate = new Date(format(localEndOfDay, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", { timeZone: 'UTC' }));
+      // Create date at 23:59:59.999 in local timezone
+      endDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        23 - timezoneOffsetHours, // Subtract offset to get local end of day in UTC
+        59, 59, 999
+      ));
       break;
     }
     case 'week': {
-      // Calculate week start/end in local timezone
-      const localStartOfWeek = startOfWeek(zonedDate, { weekStartsOn: 1 }); // Monday as first day
-      const localEndOfWeek = endOfWeek(zonedDate, { weekStartsOn: 1 });
+      // Get the day of the week (0 = Sunday, 1 = Monday, etc.)
+      const dayOfWeek = now.getUTCDay();
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to 0 = Monday
+
+      // Calculate start of week (Monday) in local timezone
+      startDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - daysFromMonday,
+        0 - timezoneOffsetHours, // Adjust for timezone
+        0, 0, 0
+      ));
       
-      // Format dates in UTC for the API query
-      startDate = new Date(format(localStartOfWeek, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", { timeZone: 'UTC' }));
-      endDate = new Date(format(localEndOfWeek, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", { timeZone: 'UTC' }));
+      // Calculate end of week (Sunday) in local timezone
+      endDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - daysFromMonday + 6, // +6 days from Monday
+        23 - timezoneOffsetHours, // Adjust for timezone
+        59, 59, 999
+      ));
       break;
     }
     case 'month': {
-      // Calculate month start/end in local timezone
-      const localStartOfMonth = startOfMonth(zonedDate);
-      const localEndOfMonth = endOfMonth(zonedDate);
+      // Calculate start of month in local timezone
+      startDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        1, // First day of month
+        0 - timezoneOffsetHours, // Adjust for timezone
+        0, 0, 0
+      ));
       
-      // Format dates in UTC for the API query
-      startDate = new Date(format(localStartOfMonth, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", { timeZone: 'UTC' }));
-      endDate = new Date(format(localEndOfMonth, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", { timeZone: 'UTC' }));
+      // Calculate end of month in local timezone
+      // Get last day of month by getting day 0 of next month
+      const lastDay = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth() + 1,
+        0
+      )).getUTCDate();
+      
+      endDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        lastDay,
+        23 - timezoneOffsetHours, // Adjust for timezone
+        59, 59, 999
+      ));
       break;
     }
     default: {
       // Same as 'today' case
-      const localStartOfDay = startOfDay(zonedDate);
-      const localEndOfDay = endOfDay(zonedDate);
+      startDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        0 - timezoneOffsetHours,
+        0, 0, 0
+      ));
       
-      startDate = new Date(format(localStartOfDay, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", { timeZone: 'UTC' }));
-      endDate = new Date(format(localEndOfDay, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", { timeZone: 'UTC' }));
+      endDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        23 - timezoneOffsetHours,
+        59, 59, 999
+      ));
       break;
     }
   }
