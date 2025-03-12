@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
 import { apiRoot } from '@/lib/commercetools';
 import { startOfDay, startOfWeek, startOfMonth, endOfDay } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const timeRange = searchParams.get('timeRange') || 'today';
   
   let startDate: Date;
-  const now = new Date();
+
+  // Create date in Australian timezone (Sydney)
+  const australianTimeZone = 'Australia/Sydney';
+  const now = toZonedTime(new Date(), australianTimeZone);
+  
   
   switch (timeRange) {
     case 'today':
