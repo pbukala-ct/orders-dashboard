@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { apiRoot } from '@/lib/commercetools';
-import { addDays } from 'date-fns';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
