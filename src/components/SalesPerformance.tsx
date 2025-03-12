@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { Order, TimeRange } from '@/types';
 
@@ -14,11 +14,11 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
 
     // Group orders by time period
     const timeData: Record<string, number> = {};
-    let timeFormat = '';
+
 
     switch (timeRange) {
       case 'today':
-        timeFormat = 'HH:mm';
+      
         // Initialize hours of the day
         for (let i = 0; i < 24; i++) {
           const hour = i.toString().padStart(2, '0');
@@ -26,14 +26,14 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
         }
         break;
       case 'week':
-        timeFormat = 'EEE';
+    
         // Initialize days of the week
         ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
           timeData[day] = 0;
         });
         break;
       case 'month':
-        timeFormat = 'dd MMM';
+      
         // For month, we'll dynamically add days as we process orders
         const today = new Date();
         const year = today.getFullYear();
@@ -81,18 +81,18 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
   const chartData = prepareChartData();
 
   // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-black">{label}</p>
+          {/* <p className="font-semibold text-black">{label}</p> */}
           <p className="text-ct-violet font-bold">${payload[0].value.toFixed(2)}</p>
         </div>
       );
     }
     return null;
   };
-
   return (
     <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-t-ct-yellow">
       <div className="flex justify-between items-center mb-6">
@@ -129,7 +129,7 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
                 dataKey="amount" 
                 fill="#6359ff"
                 radius={[4, 4, 0, 0]}
-                background={{ fill: '#f8f8f8', radius: [4, 4, 0, 0] }}
+                background={{ fill: '#f8f8f8' }}
               />
             </BarChart>
           </ResponsiveContainer>

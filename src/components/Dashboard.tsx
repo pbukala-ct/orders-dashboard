@@ -1,5 +1,5 @@
 // src/components/Dashboard.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import SalesPerformance from './SalesPerformance';
 import TotalSales from './TotalSales';
@@ -23,7 +23,7 @@ const Dashboard = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(3);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const response = await fetch(`/api/orders?timeRange=${timeRange}`);
       if (!response.ok) throw new Error('Failed to fetch orders');
@@ -34,7 +34,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange]); // Add timeRange as a dependency
 
   useEffect(() => {
     fetchOrders();
@@ -49,7 +49,7 @@ const Dashboard = () => {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [timeRange, autoRefresh, refreshInterval]);
+  }, [timeRange, autoRefresh, refreshInterval, fetchOrders]);
 
   // Toggle auto-refresh function
   const toggleAutoRefresh = () => {

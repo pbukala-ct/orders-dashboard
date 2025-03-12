@@ -14,7 +14,7 @@ interface ProductSummary {
   quantitySold: number;
 }
 
-const TopProducts = ({ orders, timeRange }: TopProductsProps) => {
+const TopProducts = ({ orders }: TopProductsProps) => {
   // State for expanding/collapsing long product names
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 

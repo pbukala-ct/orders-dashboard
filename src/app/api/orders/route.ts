@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import client, { getRequestBuilder } from '@/lib/commercetools';
-import { subDays, startOfDay, startOfWeek, startOfMonth, endOfDay } from 'date-fns';
+import { apiRoot } from '@/lib/commercetools';
+import { startOfDay, startOfWeek, startOfMonth, endOfDay } from 'date-fns';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const timeRange = searchParams.get('timeRange') || 'today';
   
-  let startDate;
+  let startDate: Date;
   const now = new Date();
   
   switch (timeRange) {
@@ -23,18 +23,34 @@ export async function GET(request: Request) {
       startDate = startOfDay(now);
   }
   
-  const requestBuilder = getRequestBuilder();
-  const ordersRequest = requestBuilder.orders
-    .where(`createdAt >= "${startDate.toISOString()}" and createdAt <= "${endOfDay(now).toISOString()}"`)
-    // Remove the sort parameter or use a valid field
-    // .sort('createdAt desc')
-    .build();
-  
+  const whereClause = `createdAt >= "${startDate.toISOString()}" and createdAt <= "${endOfDay(now).toISOString()}"`;
+
   try {
-    const response = await client.execute({ uri: ordersRequest, method: 'GET' });
+    // Use the correct structure with queryArgs
+    const response = await apiRoot
+      .orders()
+      .get({
+        queryArgs: {
+          where: whereClause,
+          sort: ['createdAt desc'],
+          limit: 100
+        }
+      })
+      .execute();
+    
     return NextResponse.json(response.body);
   } catch (error) {
     console.error('Error fetching orders:', error);
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
+    
+    // Improved error handling with more details
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch orders', 
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      }, 
+      { status: 500 }
+    );
   }
 }

@@ -1,33 +1,56 @@
-import { createClient } from '@commercetools/sdk-client';
-import { createAuthMiddlewareForClientCredentialsFlow } from '@commercetools/sdk-middleware-auth';
-import { createHttpMiddleware } from '@commercetools/sdk-middleware-http';
-import { createRequestBuilder } from '@commercetools/api-request-builder';
+import { createApiBuilderFromCtpClient } from '@commercetools/platform-sdk';
+import { ClientBuilder } from '@commercetools/sdk-client-v2';
 
-// These values should come from environment variables
-const projectKey = process.env.NEXT_PUBLIC_CT_PROJECT_KEY || '';
+// Get environment variables with fallbacks and type assertions to avoid TypeScript errors
+const projectKey = process.env.NEXT_PUBLIC_CTP_PROJECT_KEY || '';
+const authUrl = process.env.NEXT_PUBLIC_CTP_AUTH_URL || '';
+const apiUrl = process.env.NEXT_PUBLIC_CTP_API_URL || '';
 const clientId = process.env.CTP_CLIENT_ID || '';
 const clientSecret = process.env.CTP_CLIENT_SECRET || '';
-const apiUrl = process.env.CTP_API_URL || '';
-const authUrl = process.env.CTP_AUTH_URL || '';
+const scopeValue = process.env.NEXT_PUBLIC_CTP_SCOPE || '';
 
-const client = createClient({
-  middlewares: [
-    createAuthMiddlewareForClientCredentialsFlow({
-      host: authUrl,
-      projectKey,
-      credentials: {
-        clientId,
-        clientSecret,
-      },
-    }),
-    createHttpMiddleware({
-      host: apiUrl,
-    }),
-  ],
-});
+// Define scopes array properly
+const scopes = scopeValue ? [scopeValue] : [];
 
-export const getRequestBuilder = () => {
-  return createRequestBuilder({ projectKey });
-};
+// Create the client with type-safe configuration
+const ctpClient = new ClientBuilder()
+  .withClientCredentialsFlow({
+    host: authUrl,
+    projectKey,
+    credentials: {
+      clientId,
+      clientSecret,
+    },
+    scopes,
+  })
+  .withHttpMiddleware({
+    host: apiUrl,
+  })
+  .build();
 
-export default client;
+// Create the API root
+const apiRoot = createApiBuilderFromCtpClient(ctpClient).withProjectKey({ projectKey });
+
+// For backward compatibility with your route.ts file
+// const getRequestBuilder = () => {
+//   // This is a placeholder function if you need to maintain compatibility
+//   // with code that uses the older approach
+//   console.warn('getRequestBuilder is deprecated, use apiRoot instead');
+//   return {
+//     orders: {
+//       where: (whereClause: string) => ({
+//         sort: (sortParam: string) => ({
+//           build: () => {
+//             return apiRoot.orders().get({
+//               sort: [sortParam],
+//             }).execute().then(res => res.body);
+//           },
+//         }),
+//       }),
+//     },
+//   };
+// };
+
+// Export both the new apiRoot approach and the legacy getRequestBuilder for compatibility
+export { apiRoot };
+export default ctpClient;
