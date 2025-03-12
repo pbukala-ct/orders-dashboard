@@ -33,6 +33,8 @@ export async function GET(request: Request) {
 
   try {
     // Use the correct structure with queryArgs
+
+    console.log('Querying with whereClause:', whereClause);
     const response = await apiRoot
       .orders()
       .get({
