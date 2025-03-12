@@ -1,19 +1,12 @@
 import { useState } from 'react';
-import { Order, TimeRange } from '@/types';
+import { Order } from '@/types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 interface OrderLocationsProps {
   orders: Order[];
-  timeRange: TimeRange;
 }
 
-interface LocationData {
-  name: string;
-  value: number;
-  city?: string;
-}
-
-const OrderLocations = ({ orders, timeRange }: OrderLocationsProps) => {
+const OrderLocations = ({ orders }: OrderLocationsProps) => {
   const [view, setView] = useState<'state' | 'city'>('state');
   
   // Define colors for the chart
@@ -65,6 +58,7 @@ const OrderLocations = ({ orders, timeRange }: OrderLocationsProps) => {
   const locationData = getLocationData();
   
   // Custom tooltip
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (

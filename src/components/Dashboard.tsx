@@ -233,7 +233,7 @@ const Dashboard = () => {
           </div>
           
           <div>
-            <OrderLocations orders={orders} timeRange={timeRange} />
+            <OrderLocations orders={orders} />
           </div>
         </>
       )}
