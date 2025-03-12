@@ -5,6 +5,7 @@ import SalesPerformance from './SalesPerformance';
 import TotalSales from './TotalSales';
 import TopProducts from './TopProducts';
 import { TimeRange } from '@/types';
+import OrderLocations from './OrderLocations';
 
 // Define colors directly in the component to avoid Tailwind issues
 const ctColors = {
@@ -212,17 +213,29 @@ const Dashboard = () => {
           }}></div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
-          <div style={{ gridColumn: 'span 3' }}>
+        <>
+          <div style={{ marginBottom: '1.5rem' }}>
             <SalesPerformance orders={orders} timeRange={timeRange} />
           </div>
+          
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(3, 1fr)', 
+            gap: '1.5rem',
+            marginBottom: '1.5rem'
+          }}>
+            <div>
+              <TotalSales orders={orders} timeRange={timeRange} />
+            </div>
+            <div style={{ gridColumn: 'span 2' }}>
+              <TopProducts orders={orders} timeRange={timeRange} />
+            </div>
+          </div>
+          
           <div>
-            <TotalSales orders={orders} timeRange={timeRange} />
+            <OrderLocations orders={orders} timeRange={timeRange} />
           </div>
-          <div style={{ gridColumn: 'span 2' }}>
-            <TopProducts orders={orders} timeRange={timeRange} />
-          </div>
-        </div>
+        </>
       )}
     </div>
   );

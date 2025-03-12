@@ -32,6 +32,17 @@ export interface LineItem {
   totalPrice: Money;
 }
 
+export interface Address {
+  firstName?: string;
+  lastName?: string;
+  streetName?: string;
+  postalCode?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  additionalAddressInfo?: string;
+}
+
 export interface Order {
   id: string;
   version: number;
@@ -42,4 +53,6 @@ export interface Order {
   orderState: string;
   lineItems: LineItem[];
   customerId?: string;
+  billingAddress?: Address;
+  shippingAddress?: Address;
 }
