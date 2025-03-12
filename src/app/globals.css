@@ -1,26 +1,68 @@
 @import "tailwindcss";
 
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Define commercetools colors as CSS variables */
+  --ct-violet: #6359ff;
+  --ct-teal: #0bbfbf;
+  --ct-yellow: #ffc806;
+  --ct-white: #ffffff;
+  --ct-earth: #F7F2EA;
+  --ct-plum: #191741;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Animation for the spinner */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Button styles */
+.ct-button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.ct-button-primary {
+  background-color: var(--ct-violet);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(99, 89, 255, 0.2);
+}
+
+.ct-button-secondary {
+  background-color: white;
+  color: black;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ct-button-secondary:hover {
+  background-color: #f9fafb;
+}
+
+/* Card styles */
+.ct-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Common styling */
+.ct-heading {
+  font-weight: 700;
+  color: black;
+  margin-bottom: 1rem;
+}
+
+.ct-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
