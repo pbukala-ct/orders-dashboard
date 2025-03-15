@@ -8,14 +8,14 @@ import { TimeRange } from '@/types';
 import OrderLocations from './OrderLocations';
 
 // Define colors directly in the component to avoid Tailwind issues
-const ctColors = {
-  violet: '#6359ff',
-  teal: '#0bbfbf',
-  yellow: '#ffc806',
-  white: '#ffffff',
-  earth: '#F7F2EA',
-  plum: '#191741'
-};
+// const ctColors = {
+//   violet: '#6359ff',
+//   teal: '#0bbfbf',
+//   yellow: '#ffc806',
+//   white: '#ffffff',
+//   earth: '#F7F2EA',
+//   plum: '#191741'
+// };
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('today');
@@ -65,73 +65,43 @@ const Dashboard = () => {
     }
   };
 
-  // Button styles with direct CSS instead of Tailwind classes
-  const buttonStyle = (isActive: boolean) => ({
-    padding: '10px 20px',
-    borderRadius: '6px',
-    fontWeight: 500,
-    fontSize: '14px',
-    backgroundColor: isActive ? ctColors.violet : '#ffffff',
-    color: isActive ? '#ffffff' : '#000000',
-    border: isActive ? 'none' : '1px solid #e5e7eb',
-    boxShadow: isActive ? '0 4px 12px rgba(99, 89, 255, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.05)',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    margin: '0 8px 0 0'
-  });
-
-  // Toggle button style
-  const toggleButtonStyle = {
-    padding: '8px 16px',
-    borderRadius: '6px',
-    fontWeight: 500,
-    fontSize: '14px',
-    backgroundColor: autoRefresh ? ctColors.teal : '#e0e0e0',
-    color: autoRefresh ? '#ffffff' : '#666666',
-    border: 'none',
-    boxShadow: autoRefresh ? '0 2px 8px rgba(11, 191, 191, 0.2)' : 'none',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    marginTop: '0.5rem',
-    display: 'flex',
-    alignItems: 'center'
-  };
-
-  // Input style
-  const inputStyle = {
-    width: '60px',
-    padding: '6px 8px',
-    borderRadius: '4px',
-    border: '1px solid #e0e0e0',
-    marginLeft: '8px',
-    marginRight: '8px',
-    fontSize: '14px'
-  };
-
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem' }}>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#000000' }}>
-          Orders Dashboard
-        </h1>
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-6">Live Orders View</h2>
         
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-          <span style={{ fontWeight: 600, marginRight: '1rem', color: '#000000' }}>Time Range:</span>
-          <div style={{ display: 'flex' }}>
+        <div className="flex items-center mb-6">
+          <span className="font-semibold mr-4 text-black">Time Range:</span>
+          <div className="flex space-x-2">
             <button
-              style={buttonStyle(timeRange === 'today')}
+              className={`px-4 py-2 rounded-md font-medium transition ${
+                timeRange === 'today' 
+                  ? 'bg-[#6359ff] text-white shadow-md' 
+                  : 'bg-white border border-gray-200 text-black hover:bg-gray-50'
+              }`}
+              style={timeRange === 'today' ? { backgroundColor: '#6359ff', color: 'white' } : {}}
               onClick={() => setTimeRange('today')}
             >
               Today
             </button>
             <button
-              style={buttonStyle(timeRange === 'week')}
+              className={`px-4 py-2 rounded-md font-medium transition ${
+                timeRange === 'week' 
+                  ? 'bg-[#6359ff] text-white shadow-md' 
+                  : 'bg-white border border-gray-200 text-black hover:bg-gray-50'
+              }`}
+              style={timeRange === 'week' ? { backgroundColor: '#6359ff', color: 'white' } : {}}
               onClick={() => setTimeRange('week')}
             >
               This Week
             </button>
             <button
-              style={buttonStyle(timeRange === 'month')}
+              className={`px-4 py-2 rounded-md font-medium transition ${
+                timeRange === 'month' 
+                  ? 'bg-[#6359ff] text-white shadow-md' 
+                  : 'bg-white border border-gray-200 text-black hover:bg-gray-50'
+              }`}
+              style={timeRange === 'month' ? { backgroundColor: '#6359ff', color: 'white' } : {}}
               onClick={() => setTimeRange('month')}
             >
               This Month
@@ -141,93 +111,70 @@ const Dashboard = () => {
       </div>
 
       {/* Welcome Section with Dashboard Status Image */}
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        marginBottom: '2rem', 
-        backgroundColor: 'white', 
-        borderRadius: '8px', 
-        padding: '1.5rem', 
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-      }}>
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Welcome to Live Order Analytics</h2>
-          <p style={{ color: '#666', marginBottom: '1rem' }}>Your system is running optimally with 99.999% uptime.</p>
-          <div style={{ 
-            backgroundColor: ctColors.violet, 
-            color: 'white', 
-            display: 'inline-block', 
-            padding: '0.5rem 1rem', 
-            borderRadius: '2px', 
-            fontWeight: 500 
-          }}>
+      <div className="flex items-center mb-8 bg-white rounded-lg p-6 shadow-sm">
+        <div className="flex-1">
+          <h3 className="text-xl font-bold mb-2">Welcome to Live Order Analytics</h3>
+          <p className="text-gray-600 mb-4">Your system is running optimally with 99.999% uptime.</p>
+          <div className="bg-[#6359ff] text-white inline-block px-4 py-2 rounded font-medium">
             Dashboard Status: Online
           </div>
           
           {/* Auto Refresh Controls */}
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div className="mt-4">
+            <div className="flex items-center">
               <button 
                 onClick={toggleAutoRefresh} 
-                style={toggleButtonStyle}
+                className={`flex items-center px-4 py-2 rounded font-medium transition ${
+                  autoRefresh 
+                    ? 'bg-[#0bbfbf] text-white' 
+                    : 'bg-gray-200 text-gray-700'
+                }`}
               >
                 Live Refresh: {autoRefresh ? 'ON' : 'OFF'}
               </button>
               
               {autoRefresh && (
-                <div style={{ display: 'flex', alignItems: 'center', marginLeft: '1rem' }}>
-                  <span style={{ fontSize: '14px', color: '#666' }}>Refresh every</span>
+                <div className="flex items-center ml-4">
+                  <span className="text-sm text-gray-600">Refresh every</span>
                   <input
                     type="number"
                     min="1"
                     value={refreshInterval}
                     onChange={handleIntervalChange}
-                    style={inputStyle}
+                    className="mx-2 w-16 px-2 py-1 border border-gray-300 rounded text-sm"
                   />
-                  <span style={{ fontSize: '14px', color: '#666' }}>seconds</span>
+                  <span className="text-sm text-gray-600">seconds</span>
                 </div>
               )}
             </div>
           </div>
         </div>
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="flex-1 flex justify-end">
           <Image 
             src="/images/dashboard-status.png" 
             alt="System Status" 
             width={300} 
             height={200}
-            style={{ maxWidth: '100%', height: 'auto' }}
+            className="max-w-full h-auto"
           />
         </div>
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '16rem' }}>
-          <div style={{ 
-            width: '3rem', 
-            height: '3rem', 
-            borderRadius: '50%', 
-            border: '4px solid #f3f3f3',
-            borderTop: '4px solid #6359ff',
-            animation: 'spin 1s linear infinite'
-          }}></div>
+        <div className="flex justify-center items-center h-64">
+          <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-ct-violet animate-spin"></div>
         </div>
       ) : (
         <>
-          <div style={{ marginBottom: '1.5rem' }}>
+          <div className="mb-6">
             <SalesPerformance orders={orders} timeRange={timeRange} />
           </div>
           
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(3, 1fr)', 
-            gap: '1.5rem',
-            marginBottom: '1.5rem'
-          }}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div>
               <TotalSales orders={orders} timeRange={timeRange} />
             </div>
-            <div style={{ gridColumn: 'span 2' }}>
+            <div className="lg:col-span-2">
               <TopProducts orders={orders} timeRange={timeRange} />
             </div>
           </div>

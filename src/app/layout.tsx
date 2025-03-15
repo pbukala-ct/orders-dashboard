@@ -1,3 +1,4 @@
+// src/app/layout.tsx
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -25,17 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-ct-earth/20`}>
-        <header className="bg-black text-white py-4 shadow-md">
-          <div className="max-w-7xl mx-auto px-4">
-            {/* Header content */}
-          </div>
-        </header>
-        <main className="py-6">
-          {children}
-        </main>
-        <footer className="py-4 text-center text-black text-sm">
+        {children}
+        <div className="fixed bottom-0 left-0 right-0 py-2 text-center text-black text-xs border-t border-gray-200 bg-white">
           © {getCurrentAustralianYear()} commercetools Dashboard
-        </footer>
+        </div>
       </body>
     </html>
   );
