@@ -21,7 +21,7 @@ const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('today');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(3);
 
   const fetchOrders = useCallback(async () => {
