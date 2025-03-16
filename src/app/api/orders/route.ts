@@ -125,7 +125,14 @@ export async function GET(request: Request) {
       })
       .execute();
     
-    return NextResponse.json(response.body);
+      return NextResponse.json(response.body, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+      });
+    
   } catch (error) {
     console.error('Error fetching orders:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
