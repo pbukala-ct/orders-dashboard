@@ -1,0 +1,13 @@
+{
+    "name": "process-discount-usage",
+    "version": "1.0.0",
+    "description": "Cloud Function to process discount usage from Commercetools orders",
+    "main": "index.js",
+    "dependencies": {
+      "@commercetools/platform-sdk": "^7.0.0",
+      "@commercetools/sdk-client-v2": "^2.0.0",
+      "@google-cloud/bigquery": "^5.12.0",
+      "dotenv": "^16.0.0",
+      "node-fetch": "^2.6.7"
+    }
+  }

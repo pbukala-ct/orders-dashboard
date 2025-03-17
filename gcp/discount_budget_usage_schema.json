@@ -1,0 +1,44 @@
+[
+    {
+      "name": "discount_id",
+      "type": "STRING",
+      "mode": "REQUIRED",
+      "description": "The unique identifier of the discount"
+    },
+    {
+      "name": "order_id",
+      "type": "STRING",
+      "mode": "REQUIRED",
+      "description": "The unique identifier of the order where the discount was applied"
+    },
+    {
+      "name": "timestamp",
+      "type": "TIMESTAMP",
+      "mode": "REQUIRED",
+      "description": "The timestamp when the discount was applied (order creation time)"
+    },
+    {
+      "name": "discount_amount",
+      "type": "FLOAT",
+      "mode": "REQUIRED",
+      "description": "The monetary amount of the discount applied (in dollars/euros/etc.)"
+    },
+    {
+      "name": "currency_code",
+      "type": "STRING",
+      "mode": "REQUIRED",
+      "description": "The currency code for the discount amount (AUD, USD, etc.)"
+    },
+    {
+      "name": "quantity",
+      "type": "INTEGER",
+      "mode": "REQUIRED",
+      "description": "The quantity of items to which the discount was applied"
+    },
+    {
+      "name": "product_id",
+      "type": "STRING",
+      "mode": "REQUIRED",
+      "description": "The product ID to which the discount was applied"
+    }
+  ]

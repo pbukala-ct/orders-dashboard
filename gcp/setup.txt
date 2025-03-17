@@ -1,0 +1,27 @@
+# Create dataset
+gcloud bq --project=ct-sales-207211 mk commerce_analytics
+
+# Create table using schema
+bq --project_id=ct-sales-207211 load --schema=discount_id:STRING,order_id:STRING,timestamp:TIMESTAMP,discount_amount:FLOAT,currency_code:STRING,quantity:INTEGER,product_id:STRING --skip_leading_rows=1 commerce_analytics.discount_budget_usage
+
+
+
+    # Create topic
+gcloud pubsub topics create pb-discounts-orders
+
+# Create subscription
+gcloud pubsub subscriptions create order-processing-subscription \
+    --topic=pb-discounts-orders \
+    --ack-deadline=60
+
+
+    # Deploy the function
+gcloud functions deploy processDiscountUsage \
+    --runtime=nodejs18 \
+    --region australia-southeast1 \
+    --trigger-topic=pb-discounts-orders \
+    --memory=256MB \
+    --service-account qr-code-storage@ct-sales-207211.iam.gserviceaccount.com
+    --ingress-settings=all \
+    --allow-unauthenticated
+    --set-env-vars "CTP_PROJECT_KEY=demo_booktopia,CTP_CLIENT_ID=EAAFBUfv-gkE_sZ_FOebbvly,CTP_CLIENT_SECRET=B-EGTcQa5Xq7xSfu9HEkZ3HoF8lPmUg8,CTP_AUTH_URL=https://auth.australia-southeast1.gcp.commercetools.com,CTP_API_URL=https://api.australia-southeast1.gcp.commercetools.com,CTP_SCOPE=manage_project:demo_booktopia"

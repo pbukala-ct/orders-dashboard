@@ -11,6 +11,8 @@
   "dependencies": {
     "@commercetools/platform-sdk": "^7.10.0-alpha-customer-groups.2",
     "@commercetools/sdk-client-v2": "^2.5.0",
+    "@google-cloud/bigquery": "^7.9.2",
+    "@google-cloud/pubsub": "^4.10.0",
     "axios": "^1.8.2",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",

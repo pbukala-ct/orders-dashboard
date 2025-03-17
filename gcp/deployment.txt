@@ -1,0 +1,11 @@
+gcloud functions deploy processdiscountusage \
+    --runtime=nodejs20 \
+    --entry-point=processDiscountUsage \
+    --region australia-southeast1 \
+    --trigger-topic=pb-discounts-orders \
+    --memory=256MB \
+    --service-account qr-code-storage@ct-sales-207211.iam.gserviceaccount.com \
+    --ingress-settings=all \
+    --allow-unauthenticated \
+    --timeout=60s \
+    --set-env-vars "CTP_PROJECT_KEY=demo_booktopia,CTP_CLIENT_ID=EAAFBUfv-gkE_sZ_FOebbvly,CTP_CLIENT_SECRET=B-EGTcQa5Xq7xSfu9HEkZ3HoF8lPmUg8,CTP_AUTH_URL=https://auth.australia-southeast1.gcp.commercetools.com,CTP_API_URL=https://api.australia-southeast1.gcp.commercetools.com,CTP_SCOPES=manage_project:demo_booktopia"

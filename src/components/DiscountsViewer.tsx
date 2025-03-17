@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { format, parseISO } from 'date-fns';
+import DiscountBudgetViewer from './DiscountBudget';
 
 interface Discount {
   id: string;
@@ -26,6 +27,14 @@ interface Discount {
   sortOrder?: string;
   cartPredicate?: string;
   requiresDiscountCode: boolean;
+  custom?: {
+    fields?: {
+      cap?: {
+        centAmount: number;
+        currencyCode: string;
+      }
+    }
+  };
 }
 
 interface DiscountUsage {
@@ -47,6 +56,23 @@ const DiscountsViewer = () => {
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [totalOrdersValue, setTotalOrdersValue] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<'overview' | 'budget'>('overview');
+  const [hasBudgetFeature, setHasBudgetFeature] = useState(false);
+
+  // Helper function to format currency with thousand separators
+  const formatCurrency = (value: number, currencyCode: string = 'AUD') => {
+    return new Intl.NumberFormat('en-AU', { 
+      style: 'currency', 
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  };
+
+  // Helper function to format numbers with thousand separators
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat('en-AU').format(value);
+  };
 
   // Function to get discount name in the appropriate locale
   const getDiscountName = (discount: Discount) => {
@@ -66,7 +92,7 @@ const DiscountsViewer = () => {
       if (discount.value.money && discount.value.money.length > 0) {
         // Format money value
         const money = discount.value.money[0];
-        return `${(money.centAmount / 100).toFixed(2)} ${money.currencyCode}`;
+        return formatCurrency(money.centAmount / 100, money.currencyCode);
       }
     }
     
@@ -91,6 +117,15 @@ const DiscountsViewer = () => {
     return 'Validity unknown';
   };
 
+  // Function to extract and format the budget cap from custom fields
+  // const getBudgetCap = (discount: Discount) => {
+  //   if (discount.custom?.fields?.cap) {
+  //     const cap = discount.custom.fields.cap;
+  //     return formatCurrency(cap.centAmount / 100, cap.currencyCode);
+  //   }
+  //   return 'No budget cap';
+  // };
+
   useEffect(() => {
     const fetchDiscounts = async () => {
       setLoading(true);
@@ -100,7 +135,16 @@ const DiscountsViewer = () => {
         if (!response.ok) throw new Error('Failed to fetch discounts');
         
         const data = await response.json();
-        setDiscounts(data.results || []);
+        const discountsData = data.results || [];
+        setDiscounts(discountsData);
+        
+        // Check if any discount has a budget cap in custom fields
+        const hasAnyBudget = discountsData.some(
+          (discount: Discount) => discount.custom?.fields?.cap?.centAmount !== undefined && 
+                                  discount.custom.fields.cap.centAmount > 0
+        );
+        
+        setHasBudgetFeature(hasAnyBudget);
       } catch (error) {
         console.error('Error fetching discounts:', error);
       } finally {
@@ -183,8 +227,8 @@ const DiscountsViewer = () => {
       return (
         <div className="bg-white p-4 rounded-md shadow-lg border border-gray-200">
           <p className="font-bold text-[#6359ff]">{data.name}</p>
-          <p className="text-sm">Total Discount: ${data.totalAmount.toFixed(2)}</p>
-          <p className="text-sm">Orders: {data.uniqueOrderCount || data.orderCount}</p>
+          <p className="text-sm">Total Discount: {formatCurrency(data.totalAmount, data.currencyCode)}</p>
+          <p className="text-sm">Orders: {formatNumber(data.uniqueOrderCount || data.orderCount)}</p>
           <p className="text-xs text-gray-500 mt-1">
             {data.isActive ? 'Active Discount' : 'Inactive Discount'}
           </p>
@@ -193,20 +237,74 @@ const DiscountsViewer = () => {
     }
     return null;
   };
+
+  // Tab navigation component
+  const TabNavigation = () => (
+    <div className="flex border-b border-gray-200 mb-6">
+      <button
+        className={`px-4 py-2 font-medium text-sm ${
+          activeTab === 'overview' 
+            ? 'border-b-2 border-[#6359ff] text-[#6359ff]' 
+            : 'text-gray-500 hover:text-gray-700'
+        }`}
+        onClick={() => setActiveTab('overview')}
+      >
+        Discounts Overview
+      </button>
+      {hasBudgetFeature && (
+        <button
+          className={`px-4 py-2 font-medium text-sm ${
+            activeTab === 'budget' 
+              ? 'border-b-2 border-[#6359ff] text-[#6359ff]' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => setActiveTab('budget')}
+        >
+          Budget Tracking
+        </button>
+      )}
+    </div>
+  );
   
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-6">Discounts Viewer</h2>
-        <FilterButtons />
+        <h2 className="text-2xl font-bold mb-4">Discounts Viewer</h2>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <TabNavigation />
+          {activeTab === 'overview' && <FilterButtons />}
+        </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-[#6359ff] animate-spin"></div>
         </div>
+      ) : activeTab === 'budget' && hasBudgetFeature ? (
+        <DiscountBudgetViewer />
       ) : (
         <div className="grid grid-cols-1 gap-6 mb-8">
+          {/* Order Summary Card */}
+          <div className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-t-[#6359ff]">
+            <h3 className="text-xl font-bold mb-4">Order Summary</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-500 mb-1">Total Orders</p>
+                <p className="text-2xl font-bold text-black">{formatNumber(orderCount)}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-500 mb-1">Total Orders Value</p>
+                <p className="text-2xl font-bold text-[#6359ff]">{formatCurrency(totalOrdersValue)}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-500 mb-1">Average Order Value</p>
+                <p className="text-2xl font-bold text-[#0bbfbf]">
+                  {formatCurrency(orderCount > 0 ? totalOrdersValue / orderCount : 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+          
           {/* Active Discounts Table */}
           <div className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-t-[#6359ff]">
             <h3 className="text-xl font-bold mb-4">Active Discount Campaigns</h3>
@@ -229,6 +327,13 @@ const DiscountsViewer = () => {
                         <td className="px-4 py-3">
                           <div className="font-medium text-gray-900">{getDiscountName(discount)}</div>
                           {discount.key && <div className="text-xs text-gray-500">Key: {discount.key}</div>}
+                          
+                          {/* Display budget cap if available */}
+                          {discount.custom?.fields?.cap && (
+                            <div className="text-xs mt-1 bg-gray-100 rounded px-1 py-0.5 inline-block text-[#6359ff]">
+                              Budget Cap: {formatCurrency(discount.custom.fields.cap.centAmount / 100, discount.custom.fields.cap.currencyCode)}
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3 font-medium text-[#0bbfbf]">{formatDiscountValue(discount)}</td>
                         <td className="px-4 py-3 text-sm text-gray-500">{formatValidity(discount)}</td>
@@ -256,50 +361,49 @@ const DiscountsViewer = () => {
               </div>
             ) : discountUsage.length > 0 ? (
               <div className="h-80">
-<ResponsiveContainer width="100%" height="100%">
-  <BarChart
-    data={discountUsage}
-    margin={{ top: 20, right: 30, left: 30, bottom: 60 }}
-  >
-    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-    <XAxis 
-      dataKey="name" 
-      tick={{ fill: '#333333', fontSize: 12 }}
-      angle={-45}
-      textAnchor="end"
-      height={80}
-      label={{ 
-        value: 'Discount Campaigns', 
-        position: 'insideBottom', 
-        offset: -10,
-        fill: '#666666',
-        fontSize: 14
-      }}
-    />
-    <YAxis 
-      tick={{ fill: '#333333', fontSize: 12 }}
-      tickFormatter={(value) => `$${value}`}
-      label={{ 
-        value: 'Discount Amount ($)', 
-        angle: -90, 
-        position: 'insideLeft',
-        style: { textAnchor: 'middle' },
-        fill: '#666666',
-        fontSize: 14
-      }}
-    />
-    <Tooltip content={<CustomTooltip />} />
-    <Bar dataKey="totalAmount" name="Total Discount Amount">
-      {discountUsage.map((entry, index) => (
-        <Cell 
-          key={`cell-${index}`} 
-          fill={entry.isActive ? '#6359ff' : '#c7c7c7'}
-        />
-      ))}
-    </Bar>
-  </BarChart>
-</ResponsiveContainer>
-
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={discountUsage}
+                    margin={{ top: 20, right: 30, left: 30, bottom: 60 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fill: '#333333', fontSize: 12 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      label={{ 
+                        value: 'Discount Campaigns', 
+                        position: 'insideBottom', 
+                        offset: -10,
+                        fill: '#666666',
+                        fontSize: 14
+                      }}
+                    />
+                    <YAxis 
+                      tick={{ fill: '#333333', fontSize: 12 }}
+                      tickFormatter={(value) => formatCurrency(value).replace(/[A-Z]{3}\s?/g, '$')}
+                      label={{ 
+                        value: 'Discount Amount ($)', 
+                        angle: -90, 
+                        position: 'insideLeft',
+                        style: { textAnchor: 'middle' },
+                        fill: '#666666',
+                        fontSize: 14
+                      }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="totalAmount" name="Total Discount Amount">
+                      {discountUsage.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.isActive ? '#6359ff' : '#c7c7c7'}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             ) : (
               <div className="bg-gray-50 rounded-lg p-8 text-center">
@@ -313,21 +417,29 @@ const DiscountsViewer = () => {
             <div className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-t-[#0bbfbf]">
               <h3 className="text-xl font-bold mb-4">Discount Impact Details</h3>
               
+              {/* Display budget caps when available */}
+              {hasBudgetFeature && (
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg border-l-4 border-l-[#6359ff]">
+                  <p className="text-sm font-medium">Budget Tracking Available</p>
+                  <p className="text-xs text-gray-500">Some discounts have budget caps configured. Switch to the Budget Tracking tab for details.</p>
+                </div>
+              )}
+              
               <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-500 mb-1">Total Orders Value</p>
-                  <p className="text-2xl font-bold text-black">${totalOrdersValue.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-black">{formatCurrency(totalOrdersValue)}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-500 mb-1">Total Discounts Applied</p>
                   <p className="text-2xl font-bold text-[#0bbfbf]">
-                    ${discountUsage.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(2)}
+                    {formatCurrency(discountUsage.reduce((sum, item) => sum + item.totalAmount, 0))}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-500 mb-1">Average Discount per Order</p>
                   <p className="text-2xl font-bold text-[#6359ff]">
-                    ${(discountUsage.reduce((sum, item) => sum + item.totalAmount, 0) / (orderCount || 1)).toFixed(2)}
+                    {formatCurrency(discountUsage.reduce((sum, item) => sum + item.totalAmount, 0) / (orderCount || 1))}
                   </p>
                 </div>
               </div>
@@ -354,13 +466,13 @@ const DiscountsViewer = () => {
                             {usage.key && <div className="text-xs text-gray-500">Key: {usage.key}</div>}
                           </td>
                           <td className="px-4 py-3 text-right font-bold text-[#0bbfbf]">
-                            ${usage.totalAmount.toFixed(2)} {usage.currencyCode}
+                            {formatCurrency(usage.totalAmount, usage.currencyCode)}
                           </td>
                           <td className="px-4 py-3 text-right font-medium">
-                            {usage.uniqueOrderCount || usage.orderCount}
+                            {formatNumber(usage.uniqueOrderCount || usage.orderCount)}
                           </td>
                           <td className="px-4 py-3 text-right">
-                            ${((usage.totalAmount) / (usage.uniqueOrderCount || usage.orderCount || 1)).toFixed(2)}
+                            {formatCurrency((usage.totalAmount) / (usage.uniqueOrderCount || usage.orderCount || 1), usage.currencyCode)}
                           </td>
                           <td className="px-4 py-3 text-right font-medium text-[#ffc806]">
                             {((usage.totalAmount / totalOrdersValue) * 100).toFixed(2)}%
