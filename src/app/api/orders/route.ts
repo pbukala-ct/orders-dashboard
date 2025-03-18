@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         now.getUTCFullYear(),
         now.getUTCMonth(),
         now.getUTCDate(),
-        0 - timezoneOffsetHours, // Subtract offset to get local midnight in UTC
+        0 , // Subtract offset to get local midnight in UTC
         0, 0, 0
       ));
       
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         now.getUTCFullYear(),
         now.getUTCMonth(),
         now.getUTCDate(),
-        23 - timezoneOffsetHours, // Subtract offset to get local end of day in UTC
+        23 , // Subtract offset to get local end of day in UTC
         59, 59, 999
       ));
       break;
