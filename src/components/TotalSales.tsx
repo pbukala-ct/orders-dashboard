@@ -5,6 +5,17 @@ interface TotalSalesProps {
   timeRange: TimeRange;
 }
 
+
+  // Helper function to format currency with thousand separators
+  const formatCurrency = (value: number, currencyCode: string = 'AUD') => {
+    return new Intl.NumberFormat('en-AU', { 
+      style: 'currency', 
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  };
+
 const TotalSales = ({ orders, timeRange }: TotalSalesProps) => {
   // Calculate total sales amount
   const calculateTotalSales = () => {
@@ -57,7 +68,7 @@ const TotalSales = ({ orders, timeRange }: TotalSalesProps) => {
           {getTimeRangeLabel()}
         </div>
         <div className="flex items-center mb-2">
-          <span className="text-4xl font-bold text-black">${totalSales.toFixed(2)}</span>
+          <span className="text-4xl font-bold text-black">{formatCurrency(totalSales)}</span>
           <div className={`ml-4 flex items-center ${percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             <span className="text-lg font-medium">{percentageChange >= 0 ? '↑' : '↓'}</span>
             <span className="ml-1 font-medium">
