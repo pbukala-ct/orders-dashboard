@@ -71,6 +71,7 @@ const DiscountBudgetViewer = () => {
   const getBudgetColor = (percentage: number) => {
     if (percentage >= 90) return '#ef4444'; // Red for near limit
     if (percentage >= 70) return '#f59e0b'; // Amber for warning
+    if (percentage >= 20) return '#ffc806'; 
     return '#10b981'; // Green for healthy
   };
 
@@ -269,7 +270,7 @@ const DiscountBudgetViewer = () => {
                       />
                     ))}
                   </Bar>
-                  <Bar yAxisId="left" dataKey="totalBudget" name="Budget Cap" stackId="b" fill="#e5e7eb" />
+                  <Bar yAxisId="left" dataKey="totalBudget" name="Budget Cap" stackId="b" fill="#6359ff" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -279,16 +280,21 @@ const DiscountBudgetViewer = () => {
               <h4 className="text-sm font-semibold mb-2 text-gray-500">Budget Distribution</h4>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={getPieChartData()}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  />
+                <Pie
+                  data={getPieChartData()}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {
+                    getPieChartData().map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))
+                  }
+                </Pie>
                   <Tooltip 
                     formatter={(value, name) => [formatCurrency(value as number), name]}
                   />
