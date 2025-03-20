@@ -31,25 +31,6 @@ const ctpClient = new ClientBuilder()
 // Create the API root
 const apiRoot = createApiBuilderFromCtpClient(ctpClient).withProjectKey({ projectKey });
 
-// For backward compatibility with your route.ts file
-// const getRequestBuilder = () => {
-//   // This is a placeholder function if you need to maintain compatibility
-//   // with code that uses the older approach
-//   console.warn('getRequestBuilder is deprecated, use apiRoot instead');
-//   return {
-//     orders: {
-//       where: (whereClause: string) => ({
-//         sort: (sortParam: string) => ({
-//           build: () => {
-//             return apiRoot.orders().get({
-//               sort: [sortParam],
-//             }).execute().then(res => res.body);
-//           },
-//         }),
-//       }),
-//     },
-//   };
-// };
 
 // Export both the new apiRoot approach and the legacy getRequestBuilder for compatibility
 export { apiRoot };
