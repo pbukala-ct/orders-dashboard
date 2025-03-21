@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { apiRoot } from '@/lib/commercetools';
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const timeRange = searchParams.get('timeRange') || 'today';
@@ -116,7 +117,6 @@ export async function GET(request: Request) {
       
       // Parse parts from the formatted date string
       const [day, month, year] = dateStr.split('/').map(part => parseInt(part, 10));
-      const nextday = day +1; // Ensure day is set to 1 if it's 0
 
       // First day of month
       const firstDay = new Date(Date.UTC(year, month - 1, 1));
