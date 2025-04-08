@@ -1,8 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/components/DiscountsViewer.tsx
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import DiscountBudgetViewer from './DiscountBudget';
+import DiscountUsageCaps from './DiscountUsageCaps';
 
 interface Discount {
   id: string;
@@ -27,12 +28,26 @@ interface Discount {
   sortOrder?: string;
   cartPredicate?: string;
   requiresDiscountCode: boolean;
+  version: number; // Added for cap enforcement
   custom?: {
     fields?: {
+      // Budget-related fields
       cap?: {
         centAmount: number;
         currencyCode: string;
-      }
+      };
+      used?: {
+        centAmount: number;
+        currencyCode: string;
+      };
+      
+      // Usage cap and auto-disable
+      'application-cap'?: number;
+      'auto'?: boolean;
+      
+      // Campaign grouping
+      'campaing-key'?: string; // Note: Using the original field name with typo
+      'campaign-name'?: string;
     }
   };
 }
@@ -56,8 +71,9 @@ const DiscountsViewer = () => {
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [totalOrdersValue, setTotalOrdersValue] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<'overview' | 'budget'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'budget' | 'usage-caps'>('overview');
   const [hasBudgetFeature, setHasBudgetFeature] = useState(false);
+  const [hasUsageCapsFeature, setHasUsageCapsFeature] = useState(false);
 
   // Helper function to format currency with thousand separators
   const formatCurrency = (value: number, currencyCode: string = 'AUD') => {
@@ -117,15 +133,6 @@ const DiscountsViewer = () => {
     return 'Validity unknown';
   };
 
-  // Function to extract and format the budget cap from custom fields
-  // const getBudgetCap = (discount: Discount) => {
-  //   if (discount.custom?.fields?.cap) {
-  //     const cap = discount.custom.fields.cap;
-  //     return formatCurrency(cap.centAmount / 100, cap.currencyCode);
-  //   }
-  //   return 'No budget cap';
-  // };
-
   useEffect(() => {
     const fetchDiscounts = async () => {
       setLoading(true);
@@ -144,7 +151,14 @@ const DiscountsViewer = () => {
                                   discount.custom.fields.cap.centAmount > 0
         );
         
+        // Check if any discount has an application cap (usage limit) in custom fields
+        const hasAnyUsageCap = discountsData.some(
+          (discount: Discount) => discount.custom?.fields?.['application-cap'] !== undefined && 
+                                  discount.custom.fields['application-cap'] > 0
+        );
+        
         setHasBudgetFeature(hasAnyBudget);
+        setHasUsageCapsFeature(hasAnyUsageCap);
       } catch (error) {
         console.error('Error fetching discounts:', error);
       } finally {
@@ -221,6 +235,7 @@ const DiscountsViewer = () => {
   );
 
   // Custom tooltip for the chart
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -263,9 +278,21 @@ const DiscountsViewer = () => {
           Budget Tracking
         </button>
       )}
+      {hasUsageCapsFeature && (
+        <button
+          className={`px-4 py-2 font-medium text-sm ${
+            activeTab === 'usage-caps' 
+              ? 'border-b-2 border-[#6359ff] text-[#6359ff]' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => setActiveTab('usage-caps')}
+        >
+          Usage Caps
+        </button>
+      )}
     </div>
   );
-  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
@@ -282,6 +309,8 @@ const DiscountsViewer = () => {
         </div>
       ) : activeTab === 'budget' && hasBudgetFeature ? (
         <DiscountBudgetViewer />
+      ) : activeTab === 'usage-caps' && hasUsageCapsFeature ? (
+        <DiscountUsageCaps />
       ) : (
         <div className="grid grid-cols-1 gap-6 mb-8">
           {/* Order Summary Card */}
@@ -317,6 +346,7 @@ const DiscountsViewer = () => {
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Discount Name</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Value</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Validity Period</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Caps</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Priority</th>
                     </tr>
@@ -328,20 +358,50 @@ const DiscountsViewer = () => {
                           <div className="font-medium text-gray-900">{getDiscountName(discount)}</div>
                           {discount.key && <div className="text-xs text-gray-500">Key: {discount.key}</div>}
                           
-                          {/* Display budget cap if available */}
-                          {discount.custom?.fields?.cap && (
-                            <div className="text-xs mt-1 bg-gray-100 rounded px-1 py-0.5 inline-block text-[#6359ff]">
-                              Budget Cap: {formatCurrency(discount.custom.fields.cap.centAmount / 100, discount.custom.fields.cap.currencyCode)}
+                          {/* Display campaign info if available */}
+                          {discount.custom?.fields?.['campaign-name'] && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              Campaign: {discount.custom.fields['campaign-name']}
+                            </div>
+                          )}
+                          
+                          {/* Display auto-disable if configured */}
+                          
+                          {discount.custom?.fields?.['auto'] && (
+                            <div className="text-xs mt-1 bg-purple-100 text-purple-800 px-2 py-0.5 rounded inline-block">
+                              Auto-disable
                             </div>
                           )}
                         </td>
                         <td className="px-4 py-3 font-medium text-[#0bbfbf]">{formatDiscountValue(discount)}</td>
                         <td className="px-4 py-3 text-sm text-gray-500">{formatValidity(discount)}</td>
+                        <td className="px-4 py-3">
+                          <div className="space-y-1">
+                            {/* Budget cap */}
+                            {discount.custom?.fields?.cap && (
+                              <div className="text-xs bg-gray-100 rounded px-2 py-1 inline-block text-[#6359ff]">
+                                Budget Cap: {formatCurrency(discount.custom.fields.cap.centAmount / 100, discount.custom.fields.cap.currencyCode)}
+                              </div>
+                            )}
+                            
+                            {/* Application cap */}
+                            {discount.custom?.fields?.['application-cap'] !== undefined && 
+                             discount.custom.fields['application-cap'] > 0 && (
+                              <div className="text-xs bg-gray-100 rounded px-2 py-1 inline-block text-[#0bbfbf]">
+                                Usage Cap: {formatNumber(discount.custom.fields['application-cap'])}
+                              </div>
+                            )}
+                            
+                            {/* No caps */}
+                            {(!discount.custom?.fields?.cap && !discount.custom?.fields?.['application-cap']) && (
+                              <div className="text-xs text-gray-500">No caps configured</div>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-4 py-3"><StatusBadge active={discount.isActive} /></td>
                         <td className="px-4 py-3 text-sm text-gray-500">{discount.sortOrder || 'N/A'}</td>
                       </tr>
-                    ))}
-                  </tbody>
+                    ))}                  </tbody>
                 </table>
               </div>
             ) : (
@@ -417,13 +477,24 @@ const DiscountsViewer = () => {
             <div className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-t-[#0bbfbf]">
               <h3 className="text-xl font-bold mb-4">Discount Impact Details</h3>
               
-              {/* Display budget caps when available */}
-              {hasBudgetFeature && (
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg border-l-4 border-l-[#6359ff]">
-                  <p className="text-sm font-medium">Budget Tracking Available</p>
-                  <p className="text-xs text-gray-500">Some discounts have budget caps configured. Switch to the Budget Tracking tab for details.</p>
+              {/* Display feature callouts */}
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg border-l-4 border-l-[#6359ff]">
+                <p className="text-sm font-medium">Advanced Features Available</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                  {hasBudgetFeature && (
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 bg-[#6359ff] rounded-full mr-2"></span>
+                      <p className="text-xs text-gray-700">Budget Tracking available - switch to the Budget Tracking tab</p>
+                    </div>
+                  )}
+                  {hasUsageCapsFeature && (
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 bg-[#0bbfbf] rounded-full mr-2"></span>
+                      <p className="text-xs text-gray-700">Usage Caps configured - switch to the Usage Caps tab</p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
               
               <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
