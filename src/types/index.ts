@@ -33,13 +33,12 @@ export interface CartDiscount {
   key?: string;
   references?: any[];
 }// src/types/index.ts
-export type TimeRange = 'today' | 'week' | 'month';
+export type TimeRange = 'today' | 'week' | 'month' | 'year';
 
 export interface Money {
   centAmount: number;
   currencyCode: string;
 }
-
 export interface LocalizedString {
   [locale: string]: string;
 }
@@ -96,18 +95,18 @@ export interface Order {
 
 export type DiscountType = 'percentage' | 'absolute' | 'fixed';
 
-export interface Discount {
-  id: string;
-  name: string;
-  code: string;
-  description: string;
-  active: boolean;
-  discount: number;
-  discountType: DiscountType;
-  validFrom: string;
-  validUntil: string | null;
-  usageCount: number;
-}
+// export interface Discount {
+//   id: string;
+//   name: string;
+//   code: string;
+//   description: string;
+//   active: boolean;
+//   discount: number;
+//   discountType: DiscountType;
+//   validFrom: string;
+//   validUntil: string | null;
+//   usageCount: number;
+// }
 
 export interface DiscountCampaign {
   id: string;
@@ -142,4 +141,54 @@ export interface DiscountedLineItemPortion {
     id: string;
   };
   discountedAmount: Money;
+}
+
+
+export interface Discount {
+  id: string;
+  name: {
+    [key: string]: string;
+  };
+  description?: {
+    [key: string]: string;
+  };
+  value: {
+    type: 'relative' | 'absolute' | 'fixed';
+    permyriad?: number;
+    money?: {
+      centAmount: number;
+      currencyCode: string;
+    }[];
+  };
+  isActive: boolean;
+  validFrom?: string;
+  validUntil?: string;
+  key?: string;
+  sortOrder?: string;
+  cartPredicate?: string;
+  requiresDiscountCode: boolean;
+  version: number; // Added for cap enforcement
+  custom?: {
+    fields?: {
+      // Budget-related fields
+      cap?: {
+        centAmount: number;
+        currencyCode: string;
+      };
+      used?: {
+        centAmount: number;
+        currencyCode: string;
+      };
+      
+      // Usage cap and auto-disable
+      'application-cap'?: number;
+      'auto'?: boolean;
+      
+      // Campaign grouping
+      'campaing-key'?: string; // Note: Using the original field name with typo
+      'campaign-name'?: string;
+      'start-date'?: string;
+      'end-date'?: string;
+    }
+  };
 }

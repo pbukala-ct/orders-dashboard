@@ -5,16 +5,15 @@ interface TotalSalesProps {
   timeRange: TimeRange;
 }
 
-
-  // Helper function to format currency with thousand separators
-  const formatCurrency = (value: number, currencyCode: string = 'AUD') => {
-    return new Intl.NumberFormat('en-AU', { 
-      style: 'currency', 
-      currency: currencyCode,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
-  };
+// Helper function to format currency with thousand separators
+const formatCurrency = (value: number, currencyCode: string = 'AUD') => {
+  return new Intl.NumberFormat('en-AU', { 
+    style: 'currency', 
+    currency: currencyCode,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+};
 
 const TotalSales = ({ orders, timeRange }: TotalSalesProps) => {
   // Calculate total sales amount
@@ -54,6 +53,8 @@ const TotalSales = ({ orders, timeRange }: TotalSalesProps) => {
         return 'This Week';
       case 'month':
         return 'This Month';
+      case 'year':
+        return 'This Year to Date';
       default:
         return 'Today';
     }

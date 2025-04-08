@@ -1,56 +1,59 @@
 // src/components/DiscountsViewer.tsx
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { format, parseISO } from 'date-fns';
+import CampaignGroups from './CampaignGroups';
 import DiscountBudgetViewer from './DiscountBudget';
 import DiscountUsageCaps from './DiscountUsageCaps';
+import { Discount } from '@/types';
 
-interface Discount {
-  id: string;
-  name: {
-    [key: string]: string;
-  };
-  description?: {
-    [key: string]: string;
-  };
-  value: {
-    type: 'relative' | 'absolute' | 'fixed';
-    permyriad?: number;
-    money?: {
-      centAmount: number;
-      currencyCode: string;
-    }[];
-  };
-  isActive: boolean;
-  validFrom?: string;
-  validUntil?: string;
-  key?: string;
-  sortOrder?: string;
-  cartPredicate?: string;
-  requiresDiscountCode: boolean;
-  version: number; // Added for cap enforcement
-  custom?: {
-    fields?: {
-      // Budget-related fields
-      cap?: {
-        centAmount: number;
-        currencyCode: string;
-      };
-      used?: {
-        centAmount: number;
-        currencyCode: string;
-      };
+// interface Discount {
+//   id: string;
+//   name: {
+//     [key: string]: string;
+//   };
+//   description?: {
+//     [key: string]: string;
+//   };
+//   value: {
+//     type: 'relative' | 'absolute' | 'fixed';
+//     permyriad?: number;
+//     money?: {
+//       centAmount: number;
+//       currencyCode: string;
+//     }[];
+//   };
+//   isActive: boolean;
+//   validFrom?: string;
+//   validUntil?: string;
+//   key?: string;
+//   sortOrder?: string;
+//   cartPredicate?: string;
+//   requiresDiscountCode: boolean;
+//   version: number; // Added for cap enforcement
+//   custom?: {
+//     fields?: {
+//       // Budget-related fields
+//       cap?: {
+//         centAmount: number;
+//         currencyCode: string;
+//       };
+//       used?: {
+//         centAmount: number;
+//         currencyCode: string;
+//       };
       
-      // Usage cap and auto-disable
-      'application-cap'?: number;
-      'auto'?: boolean;
+//       // Usage cap and auto-disable
+//       'application-cap'?: number;
+//       'auto'?: boolean;
       
-      // Campaign grouping
-      'campaing-key'?: string; // Note: Using the original field name with typo
-      'campaign-name'?: string;
-    }
-  };
-}
+//       // Campaign grouping
+//       'campaing-key'?: string; // Note: Using the original field name with typo
+//       'campaign-name'?: string;
+//       'start-date'?: string;
+//       'end-date'?: string;
+//     }
+//   };
+// }
 
 interface DiscountUsage {
   uniqueOrderCount: number;
@@ -90,48 +93,48 @@ const DiscountsViewer = () => {
     return new Intl.NumberFormat('en-AU').format(value);
   };
 
-  // Function to get discount name in the appropriate locale
-  const getDiscountName = (discount: Discount) => {
-    if (!discount.name) return 'Unnamed Discount';
-    // Try to get English or Australian English name, fallback to first available
-    return discount.name['en-AU'] || discount.name['en'] || Object.values(discount.name)[0] || 'Unnamed Discount';
-  };
+  // // Function to get discount name in the appropriate locale
+  // const getDiscountName = (discount: Discount) => {
+  //   if (!discount.name) return 'Unnamed Discount';
+  //   // Try to get English or Australian English name, fallback to first available
+  //   return discount.name['en-AU'] || discount.name['en'] || Object.values(discount.name)[0] || 'Unnamed Discount';
+  // };
 
   // Function to format discount value for display
-  const formatDiscountValue = (discount: Discount) => {
-    if (!discount.value) return 'N/A';
+  // const formatDiscountValue = (discount: Discount) => {
+  //   if (!discount.value) return 'N/A';
     
-    if (discount.value.type === 'relative' && discount.value.permyriad) {
-      // Convert permyriad (basis points) to percentage (10000 = 100%)
-      return `${(discount.value.permyriad / 100).toFixed(0)}%`;
-    } else if (discount.value.type === 'absolute' || discount.value.type === 'fixed') {
-      if (discount.value.money && discount.value.money.length > 0) {
-        // Format money value
-        const money = discount.value.money[0];
-        return formatCurrency(money.centAmount / 100, money.currencyCode);
-      }
-    }
+  //   if (discount.value.type === 'relative' && discount.value.permyriad) {
+  //     // Convert permyriad (basis points) to percentage (10000 = 100%)
+  //     return `${(discount.value.permyriad / 100).toFixed(0)}%`;
+  //   } else if (discount.value.type === 'absolute' || discount.value.type === 'fixed') {
+  //     if (discount.value.money && discount.value.money.length > 0) {
+  //       // Format money value
+  //       const money = discount.value.money[0];
+  //       return formatCurrency(money.centAmount / 100, money.currencyCode);
+  //     }
+  //   }
     
-    return 'Complex discount';
-  };
+  //   return 'Complex discount';
+  // };
 
   // Function to format the discount validity period
-  const formatValidity = (discount: Discount) => {
-    const hasStart = !!discount.validFrom;
-    const hasEnd = !!discount.validUntil;
+  // const formatValidity = (discount: Discount) => {
+  //   const hasStart = !!discount.validFrom;
+  //   const hasEnd = !!discount.validUntil;
     
-    if (!hasStart && !hasEnd) return 'Always valid';
+  //   if (!hasStart && !hasEnd) return 'Always valid';
     
-    if (hasStart && hasEnd) {
-      return `${format(parseISO(discount.validFrom!), 'dd MMM yyyy')} - ${format(parseISO(discount.validUntil!), 'dd MMM yyyy')}`;
-    } else if (hasStart) {
-      return `From ${format(parseISO(discount.validFrom!), 'dd MMM yyyy')}`;
-    } else if (hasEnd) {
-      return `Until ${format(parseISO(discount.validUntil!), 'dd MMM yyyy')}`;
-    }
+  //   if (hasStart && hasEnd) {
+  //     return `${format(parseISO(discount.validFrom!), 'dd MMM yyyy')} - ${format(parseISO(discount.validUntil!), 'dd MMM yyyy')}`;
+  //   } else if (hasStart) {
+  //     return `From ${format(parseISO(discount.validFrom!), 'dd MMM yyyy')}`;
+  //   } else if (hasEnd) {
+  //     return `Until ${format(parseISO(discount.validUntil!), 'dd MMM yyyy')}`;
+  //   }
     
-    return 'Validity unknown';
-  };
+  //   return 'Validity unknown';
+  // };
 
   useEffect(() => {
     const fetchDiscounts = async () => {
@@ -334,82 +337,7 @@ const DiscountsViewer = () => {
             </div>
           </div>
           
-          {/* Active Discounts Table */}
-          <div className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-t-[#6359ff]">
-            <h3 className="text-xl font-bold mb-4">Active Discount Campaigns</h3>
-            
-            {discounts.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Discount Name</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Value</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Validity Period</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Caps</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Priority</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {discounts.map((discount, index) => (
-                      <tr key={discount.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900">{getDiscountName(discount)}</div>
-                          {discount.key && <div className="text-xs text-gray-500">Key: {discount.key}</div>}
-                          
-                          {/* Display campaign info if available */}
-                          {discount.custom?.fields?.['campaign-name'] && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              Campaign: {discount.custom.fields['campaign-name']}
-                            </div>
-                          )}
-                          
-                          {/* Display auto-disable if configured */}
-                          
-                          {discount.custom?.fields?.['auto'] && (
-                            <div className="text-xs mt-1 bg-purple-100 text-purple-800 px-2 py-0.5 rounded inline-block">
-                              Auto-disable
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 font-medium text-[#0bbfbf]">{formatDiscountValue(discount)}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{formatValidity(discount)}</td>
-                        <td className="px-4 py-3">
-                          <div className="space-y-1">
-                            {/* Budget cap */}
-                            {discount.custom?.fields?.cap && (
-                              <div className="text-xs bg-gray-100 rounded px-2 py-1 inline-block text-[#6359ff]">
-                                Budget Cap: {formatCurrency(discount.custom.fields.cap.centAmount / 100, discount.custom.fields.cap.currencyCode)}
-                              </div>
-                            )}
-                            
-                            {/* Application cap */}
-                            {discount.custom?.fields?.['application-cap'] !== undefined && 
-                             discount.custom.fields['application-cap'] > 0 && (
-                              <div className="text-xs bg-gray-100 rounded px-2 py-1 inline-block text-[#0bbfbf]">
-                                Usage Cap: {formatNumber(discount.custom.fields['application-cap'])}
-                              </div>
-                            )}
-                            
-                            {/* No caps */}
-                            {(!discount.custom?.fields?.cap && !discount.custom?.fields?.['application-cap']) && (
-                              <div className="text-xs text-gray-500">No caps configured</div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3"><StatusBadge active={discount.isActive} /></td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{discount.sortOrder || 'N/A'}</td>
-                      </tr>
-                    ))}                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="bg-gray-50 rounded-lg p-8 text-center">
-                <p className="text-gray-500">No discounts found with the current filter.</p>
-              </div>
-            )}
-          </div>
+          <CampaignGroups discounts={discounts} />
           
           {/* Discount Usage Chart */}
           <div className="bg-white rounded-lg shadow-sm p-6 border-t-4 border-t-[#ffc806]">

@@ -83,6 +83,16 @@ export async function GET(request: Request) {
     return newDate;
   };
   
+  // Function to get the current year in Australian timezone
+  const getCurrentYearAus = (date: Date): number => {
+    const dateStr = new Intl.DateTimeFormat('en-AU', {
+      timeZone: australianTZ,
+      year: 'numeric'
+    } as Intl.DateTimeFormatOptions).format(date);
+    
+    return parseInt(dateStr, 10);
+  };
+  
   let startDate;
   let endDate;
   
@@ -127,6 +137,18 @@ export async function GET(request: Request) {
       endDate = getEndOfDayAus(lastDay);
       break;
     }
+    case 'year': {
+      // Get the current year in Australian timezone
+      const currentYear = getCurrentYearAus(now);
+      
+      // First day of the year (January 1st)
+      const firstDayOfYear = new Date(Date.UTC(currentYear, 0, 1));
+      startDate = getStartOfDayAus(firstDayOfYear);
+      
+      // End date is current date at end of day
+      endDate = getEndOfDayAus(now);
+      break;
+    }
     default: {
       // Default to today
       startDate = getStartOfDayAus(now);
@@ -148,7 +170,7 @@ export async function GET(request: Request) {
         queryArgs: {
           where: whereClause,
           sort: ['createdAt desc'],
-          limit: 100
+          limit: timeRange === 'year' ? 500 : 100 // Increased limit for year-to-date data
         }
       })
       .execute();

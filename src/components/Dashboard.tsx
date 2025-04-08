@@ -1,4 +1,4 @@
-// src/components/Dashboard.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import SalesPerformance from './SalesPerformance';
@@ -6,16 +6,6 @@ import TotalSales from './TotalSales';
 import TopProducts from './TopProducts';
 import { TimeRange } from '@/types';
 import OrderLocations from './OrderLocations';
-
-// Define colors directly in the component to avoid Tailwind issues
-// const ctColors = {
-//   violet: '#6359ff',
-//   teal: '#0bbfbf',
-//   yellow: '#ffc806',
-//   white: '#ffffff',
-//   earth: '#F7F2EA',
-//   plum: '#191741'
-// };
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('today');
@@ -35,7 +25,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [timeRange]); // Add timeRange as a dependency
+  }, [timeRange]);
 
   useEffect(() => {
     fetchOrders();
@@ -72,7 +62,7 @@ const Dashboard = () => {
         
         <div className="flex items-center mb-6">
           <span className="font-semibold mr-4 text-black">Time Range:</span>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button
               className={`px-4 py-2 rounded-md font-medium transition ${
                 timeRange === 'today' 
@@ -105,6 +95,17 @@ const Dashboard = () => {
               onClick={() => setTimeRange('month')}
             >
               This Month
+            </button>
+            <button
+              className={`px-4 py-2 rounded-md font-medium transition ${
+                timeRange === 'year' 
+                  ? 'bg-[#6359ff] text-white shadow-md' 
+                  : 'bg-white border border-gray-200 text-black hover:bg-gray-50'
+              }`}
+              style={timeRange === 'year' ? { backgroundColor: '#6359ff', color: 'white' } : {}}
+              onClick={() => setTimeRange('year')}
+            >
+              This Year to Date
             </button>
           </div>
         </div>

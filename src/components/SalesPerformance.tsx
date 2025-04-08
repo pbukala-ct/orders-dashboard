@@ -15,10 +15,8 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
     // Group orders by time period
     const timeData: Record<string, number> = {};
 
-
     switch (timeRange) {
       case 'today':
-      
         // Initialize hours of the day
         for (let i = 0; i < 24; i++) {
           const hour = i.toString().padStart(2, '0');
@@ -26,14 +24,12 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
         }
         break;
       case 'week':
-    
         // Initialize days of the week
         ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
           timeData[day] = 0;
         });
         break;
       case 'month':
-      
         // For month, we'll dynamically add days as we process orders
         const today = new Date();
         const year = today.getFullYear();
@@ -44,6 +40,16 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
           const date = new Date(year, month, i);
           const key = format(date, 'dd MMM');
           timeData[key] = 0;
+        }
+        break;
+      case 'year':
+        // Initialize months of the year
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const currentMonth = new Date().getMonth();
+        
+        // Only include months up to the current month for year-to-date
+        for (let i = 0; i <= currentMonth; i++) {
+          timeData[monthNames[i]] = 0;
         }
         break;
     }
@@ -63,6 +69,9 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
         case 'month':
           key = format(orderDate, 'dd MMM');
           break;
+        case 'year':
+          key = format(orderDate, 'MMM');
+          break;
       }
 
       if (key in timeData) {
@@ -80,13 +89,44 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
 
   const chartData = prepareChartData();
 
+  // Calculate appropriate bar size based on time range and data length
+  const getBarSize = () => {
+    switch (timeRange) {
+      case 'today':
+        return 40;
+      case 'week':
+        return 40;
+      case 'month':
+        return 15;
+      case 'year':
+        return 40;
+      default:
+        return 40;
+    }
+  };
+
+  // Get appropriate label for the time range
+  const getTimeRangeLabel = () => {
+    switch (timeRange) {
+      case 'today':
+        return 'Today';
+      case 'week':
+        return 'This Week';
+      case 'month':
+        return 'This Month';
+      case 'year':
+        return 'This Year to Date';
+      default:
+        return 'Custom Range';
+    }
+  };
+
   // Custom tooltip component
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          {/* <p className="font-semibold text-black">{label}</p> */}
           <p className="text-ct-violet font-bold">${payload[0].value.toFixed(2)}</p>
         </div>
       );
@@ -98,7 +138,7 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-black">Sales Performance</h2>
         <div className="bg-ct-yellow/10 px-3 py-1 rounded-full text-black font-medium">
-          {timeRange === 'today' ? 'Today' : timeRange === 'week' ? 'This Week' : 'This Month'}
+          {getTimeRangeLabel()}
         </div>
       </div>
       
@@ -108,7 +148,7 @@ const SalesPerformance = ({ orders, timeRange }: SalesPerformanceProps) => {
             <BarChart
               data={chartData}
               margin={{ top: 10, right: 10, left: 10, bottom: 30 }}
-              barSize={timeRange === 'month' ? 15 : 40}
+              barSize={getBarSize()}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
               <XAxis 

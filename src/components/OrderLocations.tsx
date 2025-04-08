@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Order } from '@/types';
+import { Order, TimeRange } from '@/types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 interface OrderLocationsProps {
   orders: Order[];
+  timeRange?: TimeRange; // Make it optional since it wasn't in the original interface
 }
 
-const OrderLocations = ({ orders }: OrderLocationsProps) => {
+const OrderLocations = ({ orders, timeRange }: OrderLocationsProps) => {
   const [view, setView] = useState<'state' | 'city'>('state');
   
   // Define colors for the chart
@@ -15,6 +16,12 @@ const OrderLocations = ({ orders }: OrderLocationsProps) => {
   // Function to process orders and extract location data
   const getLocationData = () => {
     if (!orders.length) return [];
+    
+    // Count the orders with location data to log for debugging
+    const ordersWithStateData = orders.filter(order => order.billingAddress?.state).length;
+    const ordersWithCityData = orders.filter(order => order.billingAddress?.city).length;
+    
+    console.log(`OrderLocations: Processing ${orders.length} orders. Orders with state data: ${ordersWithStateData}, with city data: ${ordersWithCityData}`);
     
     if (view === 'state') {
       // Count orders by state/country
@@ -74,6 +81,24 @@ const OrderLocations = ({ orders }: OrderLocationsProps) => {
       );
     }
     return null;
+  };
+
+  // Get time range description for the empty state message
+  const getTimeRangeDescription = () => {
+    if (!timeRange) return '';
+    
+    switch (timeRange) {
+      case 'today':
+        return ' today';
+      case 'week':
+        return ' this week';
+      case 'month':
+        return ' this month';
+      case 'year':
+        return ' this year';
+      default:
+        return '';
+    }
   };
 
   return (
@@ -210,7 +235,11 @@ const OrderLocations = ({ orders }: OrderLocationsProps) => {
           backgroundColor: '#f9f9f9',
           borderRadius: '4px'
         }}>
-          <p style={{ color: '#666' }}>No location data available</p>
+          <p style={{ color: '#666' }}>
+            {orders.length > 0 
+              ? `No location data available for orders${getTimeRangeDescription()}`
+              : `No orders available${getTimeRangeDescription()}`}
+          </p>
         </div>
       )}
     </div>

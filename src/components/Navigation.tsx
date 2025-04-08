@@ -55,7 +55,7 @@ const Navigation = () => {
           {!isCollapsed && (
             <div>
               <h1 className="text-lg font-bold tracking-tight text-gray-900">commercetools</h1>
-              <p className="text-xs text-gray-500">Order Analytics</p>
+              <p className="text-xs text-gray-500">Order & Discount Analytics</p>
             </div>
           )}
         </div>
