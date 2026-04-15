@@ -105,11 +105,11 @@ const TopProducts = ({ orders }: TopProductsProps) => {
         <div className="overflow-x-auto">
           <table className="w-full" style={{ tableLayout: 'fixed' }}>
             <colgroup>
-              <col style={{ width: '40px' }} /> {/* No. column */}
-              <col style={{ width: '40%' }} /> {/* Product name column */}
-              <col style={{ width: '20%' }} /> {/* SKU column */}
-              <col style={{ width: '20%' }} /> {/* Revenue column */}
-              <col style={{ width: '10%' }} /> {/* Qty Sold column */}
+              <col style={{ width: '40px' }} />
+              <col style={{ width: '40%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '10%' }} />
             </colgroup>
             <thead>
               <tr className="bg-gradient-to-r from-ct-violet/20 to-ct-teal/20 rounded-lg">
