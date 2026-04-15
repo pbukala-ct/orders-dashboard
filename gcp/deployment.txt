@@ -1,11 +1,37 @@
-gcloud functions deploy processdiscountusage \
+# ============================================================
+# GCP Cloud Function — processDiscountUsage
+# Deployment script
+# ============================================================
+# Prerequisites:
+#   gcloud auth login
+#   gcloud config set project ct-sales-207211
+#   cd gcp/processDiscountUsage && npm install
+# ============================================================
+
+gcloud functions deploy processDiscountUsage \
+    --gen2 \
     --runtime=nodejs20 \
     --entry-point=processDiscountUsage \
-    --region australia-southeast1 \
+    --region=australia-southeast1 \
     --trigger-topic=pb-discounts-orders \
     --memory=256MB \
-    --service-account qr-code-storage@ct-sales-207211.iam.gserviceaccount.com \
-    --ingress-settings=all \
-    --allow-unauthenticated \
     --timeout=60s \
-    --set-env-vars ""
+    --service-account=qr-code-storage@ct-sales-207211.iam.gserviceaccount.com \
+    --ingress-settings=all \
+    --source=gcp/processDiscountUsage \
+    --set-env-vars "\
+CTP_PROJECT_KEY=<YOUR_PROJECT_KEY>,\
+CTP_CLIENT_ID=<YOUR_CLIENT_ID>,\
+CTP_CLIENT_SECRET=<YOUR_CLIENT_SECRET>,\
+CTP_AUTH_URL=https://auth.australia-southeast1.gcp.commercetools.com,\
+CTP_API_URL=https://api.australia-southeast1.gcp.commercetools.com,\
+CTP_SCOPES=manage_project:<YOUR_PROJECT_KEY>,\
+DATASET_ID=commerce_analytics,\
+TABLE_ID=discount_budget_usage,\
+ENFORCE_CAPS=false"
+
+# ============================================================
+# Optional: enable automatic discount deactivation when
+# application-cap is reached. Requires manage_project scope.
+# Change ENFORCE_CAPS=false → ENFORCE_CAPS=true to activate.
+# ============================================================

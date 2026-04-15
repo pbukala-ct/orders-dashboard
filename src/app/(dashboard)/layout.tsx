@@ -1,4 +1,5 @@
 // src/app/(dashboard)/layout.tsx
+import { Suspense } from 'react';
 import Navigation from '@/components/Navigation';
 
 export default function DashboardLayout({
@@ -8,7 +9,9 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex h-screen w-full overflow-hidden">
-      <Navigation />
+      <Suspense fallback={<div className="w-20 bg-white border-r border-gray-200 h-screen" />}>
+        <Navigation />
+      </Suspense>
       <div className="flex-1 overflow-auto">
         <header className="bg-white py-4 px-6 shadow-sm border-b">
           <div className="max-w-7xl mx-auto">

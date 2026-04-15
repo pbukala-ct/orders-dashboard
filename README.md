@@ -1,36 +1,145 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Orders Dashboard
 
-## Getting Started
+A real-time analytics dashboard for commercetools-powered e-commerce. Provides visibility into live orders, sales performance, and discount campaign management including budget and usage cap tracking.
 
-First, run the development server:
+**Stack:** Next.js 15 (App Router) · TypeScript · Tailwind CSS · Recharts · SWR · Google BigQuery · commercetools
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Features
+
+- **Orders Dashboard** — sales performance charts, top products by revenue, order locations, filterable by time range
+- **Campaigns** — discount grouping by campaign key, start/end dates, active/inactive status
+- **Budget Tracker** — tracks discount spend vs. budget cap (sourced from BigQuery)
+- **Usage Cap Monitor** — tracks application count vs. application cap (sourced from BigQuery)
+- **Impact Analysis** — discount usage breakdown with per-discount order counts and amounts
+
+---
+
+## Architecture
+
+```
+commercetools Platform
+    │
+    ├── Orders API ──────────────────────────────────────────────────┐
+    ├── Cart Discounts API (Custom Fields) ──────────────────────────┤
+    └── Pub/Sub Events ──► GCP Cloud Function (processDiscountUsage) │
+                                    │                                │
+                                    ▼                                │
+                            BigQuery Table                           │
+                        (discount_budget_usage)                      │
+                                    │                                │
+                        ┌───────────┘                                │
+                        │                                            │
+                        ▼                                            ▼
+                 Next.js API Routes  ◄────────────────────────────────
+                        │
+                        ▼
+                Frontend React App
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Budget and usage tracking is sourced exclusively from BigQuery — only orders where discounts were actually applied appear there, giving accurate per-discount spend and application counts without noise from unrelated orders.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Local Development
 
-## Learn More
+### Prerequisites
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js 20+
+- A commercetools project with API credentials
+- A GCP project with BigQuery and Pub/Sub set up (see `gcp/setup.txt`)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+cp .env.local.example .env.local   # then fill in your credentials
+npm run dev
+```
 
-## Deploy on Vercel
+App runs at `http://localhost:3000`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Create `.env.local` with the following:
+
+```bash
+# commercetools
+NEXT_PUBLIC_CTP_PROJECT_KEY=your-project-key
+NEXT_PUBLIC_CTP_AUTH_URL=https://auth.australia-southeast1.gcp.commercetools.com
+NEXT_PUBLIC_CTP_API_URL=https://api.australia-southeast1.gcp.commercetools.com
+NEXT_PUBLIC_CTP_SCOPE=manage_project:your-project-key
+CTP_CLIENT_ID=your-client-id
+CTP_CLIENT_SECRET=your-client-secret
+
+# Google Cloud / BigQuery (service account credentials)
+GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+GOOGLE_CLOUD_CLIENT_EMAIL=your-sa@your-project.iam.gserviceaccount.com
+# Paste the full private key on one line with \n for newlines, wrapped in double quotes:
+GOOGLE_CLOUD_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
+
+# Optional — defaults shown
+BIGQUERY_DATASET_ID=commerce_analytics
+BIGQUERY_TABLE_ID=discount_budget_usage
+```
+
+> **Private key format:** copy the `private_key` value from your GCP service account JSON file. It must be on a single line with literal `\n` between each line, wrapped in double quotes.
+
+---
+
+## GCP Cloud Function
+
+The `processDiscountUsage` Cloud Function listens on a Pub/Sub topic and writes one BigQuery row per discount per line item per order.
+
+```
+gcp/
+  processDiscountUsage/   # Cloud Function source
+  deployment.txt          # gcloud deploy command
+  setup.txt               # GCP/BigQuery initial setup
+```
+
+Deploy:
+```bash
+# Fill in the variables in gcp/deployment.txt first, then:
+bash gcp/deploy.sh
+```
+
+See `gcp/deployment.txt` for the full `gcloud functions deploy` command and environment variable list.
+
+---
+
+## commercetools Custom Type
+
+Cart Discounts require a custom type (`cart-discount-budget`) with these fields:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `cap` | Money | Budget cap — max discount spend |
+| `application-cap` | Number | Max times the discount can be applied |
+| `auto` | Boolean | Auto-disable when cap is reached |
+| `campaing-key` | String | Groups discounts into campaigns *(typo is intentional — matches production data)* |
+| `campaign-name` | String | Human-readable campaign name |
+| `start-date` | Date | Campaign start |
+| `end-date` | Date | Campaign end |
+
+The full type definition JSON is in `CLAUDE.md`.
+
+---
+
+## Deployment
+
+### Netlify (recommended)
+
+1. Connect the repository in the Netlify dashboard
+2. Set all environment variables from `.env.local` in **Site settings → Environment variables**
+3. Deploy — `netlify.toml` handles the build config and Next.js runtime automatically
+
+### Commands
+
+```bash
+npm run dev      # development server
+npm run build    # type-check + production build
+npm run start    # serve production build locally
+npm run lint     # ESLint
+```

@@ -83,82 +83,51 @@ export async function GET(request: Request) {
         timeFilter = '';
     }
 
-    // Variables to track orders
     let totalOrders = 0;
-    // let uniqueOrderIds = new Set();
+    let bqError: string | null = null;
+
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT;
+    const fullTable = `\`${projectId}.${DATASET_ID}.${TABLE_ID}\``;
+
+    const query = `
+      SELECT
+        discount_id,
+        SUM(discount_amount)        AS total_spent,
+        COUNT(DISTINCT order_id)    AS order_count
+      FROM ${fullTable}
+      WHERE 1=1
+        ${timeFilter}
+      GROUP BY discount_id
+    `;
+
+    console.log('Executing BigQuery query:', query);
 
     try {
-      // Define the BigQuery SQL (adjust based on your actual schema)
-      const query = `
-        SELECT 
-          discount_id,
-          SUM(discount_amount) as total_spent,
-          COUNT(DISTINCT order_id) as order_count
-        FROM 
-          \`${DATASET_ID}.${TABLE_ID}\`
-        WHERE 
-          1=1 
-          ${timeFilter}
-        GROUP BY 
-          discount_id
-      `;
-
-      console.log('Executing BigQuery query:', query);
-      
-      // Execute BigQuery query
       const [rows] = await bigquery.query({ query });
-      
-      console.log(`Retrieved usage data for ${rows.length} discounts`);
-      
-      // Process the BigQuery results
+      console.log(`BigQuery returned ${rows.length} discount rows`);
+
       rows.forEach(row => {
         if (discountMap.has(row.discount_id)) {
-          const discountInfo = discountMap.get(row.discount_id);
-          discountInfo.totalSpent = row.total_spent;
-          discountInfo.orderCount = row.order_count || 0;
-          
-          // Add to total orders (will be deduplicated with Set)
-          totalOrders += row.order_count || 0;
+          const d = discountMap.get(row.discount_id);
+          d.totalSpent = Number(row.total_spent) || 0;
+          d.orderCount = Number(row.order_count) || 0;
+        } else {
+          console.warn(`BQ discount_id ${row.discount_id} not found in CT discount map`);
         }
       });
 
-      // Get a count of unique orders from a separate query
       const orderQuery = `
-        SELECT 
-          COUNT(DISTINCT order_id) as unique_order_count
-        FROM 
-          \`${DATASET_ID}.${TABLE_ID}\`
-        WHERE 
-          1=1 
+        SELECT COUNT(DISTINCT order_id) AS unique_order_count
+        FROM ${fullTable}
+        WHERE 1=1
           ${timeFilter}
       `;
-      
       const [orderCountResult] = await bigquery.query({ query: orderQuery });
-      if (orderCountResult && orderCountResult.length > 0) {
-        totalOrders = orderCountResult[0].unique_order_count || 0;
-      }
-      
+      totalOrders = Number(orderCountResult?.[0]?.unique_order_count) || 0;
+
     } catch (error) {
       console.error('Error querying BigQuery:', error);
-      
-      // If BigQuery query fails, continue with simulated data for development
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Using simulated data for development');
-        
-        // Simulate usage data for development/testing
-        discountMap.forEach((discount) => {
-          // Only generate random usage for discounts with budget caps
-          if (discount.totalBudget > 0) {
-            // Generate random usage between 10% and 95% of the budget
-            const randomPercentage = Math.random() * 0.85 + 0.1;
-            discount.totalSpent = discount.totalBudget * randomPercentage;
-            discount.orderCount = Math.floor(Math.random() * 50) + 5; // Random order count between 5 and 54
-          }
-        });
-        
-        // Simulate total orders for development
-        totalOrders = Math.floor(Math.random() * 200) + 50; // Random number between 50 and 249
-      }
+      bqError = error instanceof Error ? error.message : String(error);
     }
 
     // Calculate spent percentage for each discount
@@ -179,7 +148,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       results: discountBudgetsArray,
       timeRange,
-      totalOrders
+      totalOrders,
+      ...(bqError && { bqError }),
     });
   } catch (error) {
     console.error('Error fetching discount budget data:', error);

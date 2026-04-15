@@ -556,14 +556,52 @@ const CampaignCard = ({ campaign, isExpanded, onToggle }: {
   };
 
 
-// Main Campaign Groups Component with modernized UI
+// ─── KPI helpers ─────────────────────────────────────────────────────────────
+const computeCampaignKPIs = (discounts: Discount[]) => {
+  const now = new Date();
+  const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  let totalBudgetAllocated = 0;
+  let hasBudget = false;
+  const campaignEndDates = new Map<string, Date>();
+
+  discounts.forEach((d) => {
+    const cap = d.custom?.fields?.cap;
+    if (cap?.centAmount && cap.centAmount > 0) {
+      totalBudgetAllocated += cap.centAmount / 100;
+      hasBudget = true;
+    }
+    // Track latest end date per campaign key
+    const key = d.custom?.fields?.['campaing-key'] || 'uncategorized';
+    const endStr = d.custom?.fields?.['end-date'] || d.validUntil;
+    if (endStr) {
+      const endDate = new Date(endStr);
+      const existing = campaignEndDates.get(key);
+      if (!existing || endDate > existing) campaignEndDates.set(key, endDate);
+    }
+  });
+
+  const campaigns = extractCampaignInfo(discounts);
+  const activeCampaignCount = campaigns.filter(
+    (c) => c.status === 'active' || c.status === 'ongoing' || c.status === 'mixed'
+  ).length;
+
+  let expiringWithin30Count = 0;
+  campaignEndDates.forEach((endDate) => {
+    if (endDate >= now && endDate <= in30) expiringWithin30Count++;
+  });
+
+  return { totalBudgetAllocated, hasBudget, activeCampaignCount, expiringWithin30Count };
+};
+
 // Main Campaign Groups Component with commercetools styling
 const CampaignGroups: React.FC<CampaignGroupsProps> = ({ discounts }) => {
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<string>>(new Set());
   const [campaignFilter, setCampaignFilter] = useState<string>('all');
   const [expandAll, setExpandAll] = useState(false);
-  
+
   const campaigns = extractCampaignInfo(discounts);
+  const kpis = computeCampaignKPIs(discounts);
   
   // Filter campaigns based on selected filter
   const filteredCampaigns = campaigns.filter(campaign => {
@@ -705,6 +743,35 @@ const CampaignGroups: React.FC<CampaignGroupsProps> = ({ discounts }) => {
         </div>
       </div>
       
+      {/* KPI Strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-0 bg-white border-b border-gray-200">
+        <div className="p-4 border-r border-gray-100 flex flex-col justify-center">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Total Discounts</p>
+          <p className="text-2xl font-bold text-[#6359ff]">{discounts.length}</p>
+        </div>
+        <div className="p-4 border-r border-gray-100 flex flex-col justify-center">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Active Campaigns</p>
+          <p className="text-2xl font-bold text-[#0bbfbf]">{kpis.activeCampaignCount}</p>
+        </div>
+        <div className="p-4 border-r border-gray-100 flex flex-col justify-center">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Expiring Within 30 Days</p>
+          <p
+            className="text-2xl font-bold"
+            style={{ color: kpis.expiringWithin30Count > 0 ? '#f59e0b' : '#6b7280' }}
+          >
+            {kpis.expiringWithin30Count}
+          </p>
+        </div>
+        <div className="p-4 flex flex-col justify-center">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Total Budget Allocated</p>
+          <p className="text-2xl font-bold text-gray-900">
+            {kpis.hasBudget
+              ? new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', minimumFractionDigits: 0 }).format(kpis.totalBudgetAllocated)
+              : '—'}
+          </p>
+        </div>
+      </div>
+
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-0 bg-white border-b border-gray-200">
         <div className="p-4 border-r border-gray-200 flex flex-col justify-center items-center">

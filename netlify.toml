@@ -1,3 +1,15 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Next.js runtime — handles SSR, API routes, and ISR on Netlify
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# API routes must never be cached
 [[headers]]
   for = "/api/*"
   [headers.values]
