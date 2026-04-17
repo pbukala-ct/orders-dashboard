@@ -40,7 +40,7 @@ const TopProducts = ({ orders }: TopProductsProps) => {
         } else {
           productMap.set(productId, {
             id: productId,
-            name: item.name['en-AU'] || 'Unknown Product', // Assuming English locale, adjust as needed
+            name: item.name['en-GB'] || item.name['en'] || item.name['en-AU'] || Object.values(item.name)[0] || 'Unknown Product',
             sku: item.variant.sku || 'N/A',
             revenue,
             quantitySold: quantity,
