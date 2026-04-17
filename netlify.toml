@@ -13,8 +13,8 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "ALLOW-FROM https://dashboard-alpha-tan-44.vercel.app"
-    Content-Security-Policy = "frame-ancestors 'self' https://dashboard-alpha-tan-44.vercel.app"
+    X-Frame-Options = "SAMEORIGIN"
+    Content-Security-Policy = "frame-ancestors *"
 
 # API routes must never be cached
 [[headers]]
