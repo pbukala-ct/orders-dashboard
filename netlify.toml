@@ -9,6 +9,13 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# Allow embedding in the Merchant Center custom app (iframe)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "ALLOW-FROM https://dashboard-alpha-tan-44.vercel.app"
+    Content-Security-Policy = "frame-ancestors 'self' https://dashboard-alpha-tan-44.vercel.app"
+
 # API routes must never be cached
 [[headers]]
   for = "/api/*"
